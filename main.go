@@ -109,8 +109,14 @@ func timeHandler(w http.ResponseWriter, r *http.Request) {
 		transMillis,
 		transOffset,
 	}
+	buf, err := json.Marshal(data)
+	if err != nil {
+		log.Printf("failed to encode response: %v", err)
+		http.Error(w, "internal error", http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(data)
+	w.Write(buf)
 }
 
 var currentTimeOverride *time.Time
