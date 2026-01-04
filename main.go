@@ -70,11 +70,11 @@ func recursiveTzTransitionSearch(start time.Time, end time.Time) time.Time {
 }
 
 func timeHandler(w http.ResponseWriter, r *http.Request) {
-	now := time.Now()
-	if override := os.Getenv("OVERRIDE_CURRENT_TIME"); override != "" {
-		if ts, err := strconv.ParseInt(override, 10, 64); err == nil {
-			now = time.Unix(ts, 0)
-		}
+	var now time.Time
+	if currentTimeOverride != nil {
+		now = *currentTimeOverride
+	} else {
+		now = time.Now()
 	}
 
 	timezone := r.Header.Get("X-Timezone")
@@ -111,6 +111,17 @@ func timeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
+}
+
+var currentTimeOverride *time.Time
+
+func init() {
+	if override := os.Getenv("OVERRIDE_CURRENT_TIME"); override != "" {
+		if ts, err := strconv.ParseInt(override, 10, 64); err == nil {
+			currentTime := time.Unix(ts, 0)
+			currentTimeOverride = &currentTime
+		}
+	}
 }
 
 func main() {
