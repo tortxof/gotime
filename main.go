@@ -10,6 +10,25 @@ import (
 	"time"
 )
 
+type responseWriter struct {
+	http.ResponseWriter
+	status int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.status = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
+func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+		rw := &responseWriter{ResponseWriter: w, status: http.StatusOK}
+		next(rw, r)
+		log.Printf("%s %s %d %s", r.Method, r.URL.Path, rw.status, time.Since(start))
+	}
+}
+
 func ZoneOffset(t time.Time) int {
 	_, offset := t.Zone()
 	return offset
@@ -90,7 +109,6 @@ func timeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	http.HandleFunc("/time", timeHandler)
+	http.HandleFunc("/time", loggingMiddleware(timeHandler))
 	log.Fatal(http.ListenAndServe(":8080", nil))
-
 }
