@@ -35,11 +35,11 @@ func ZoneOffset(t time.Time) int {
 }
 
 // Find the next time at which a timezone transition occurs.
-// If a transition is found within the next 2 hours,
+// If a transition is found within the next 4 weeks,
 // return the time at which the transition occurs, and the new timezone offset.
 // If no transition is found return an error.
 func findNextTimezoneTransition(start time.Time) (time.Time, error) {
-	end := start.Add(time.Hour * 2)
+	end := start.Add(time.Hour * 24 * 7 * 4)
 
 	if ZoneOffset(start) == ZoneOffset(end) {
 		return time.Time{}, errors.New("no transition")
