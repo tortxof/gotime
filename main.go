@@ -29,7 +29,7 @@ func loggingMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func ZoneOffset(t time.Time) int {
+func zoneOffset(t time.Time) int {
 	_, offset := t.Zone()
 	return offset
 }
@@ -41,7 +41,7 @@ func ZoneOffset(t time.Time) int {
 func findNextTimezoneTransition(start time.Time) (time.Time, error) {
 	end := start.Add(time.Hour * 24 * 7 * 4)
 
-	if ZoneOffset(start) == ZoneOffset(end) {
+	if zoneOffset(start) == zoneOffset(end) {
 		return time.Time{}, errors.New("no transition")
 	}
 
@@ -62,7 +62,7 @@ func recursiveTzTransitionSearch(start time.Time, end time.Time) time.Time {
 
 	mid := start.Add((timeDiff / 2).Truncate(time.Second))
 
-	if ZoneOffset(start) == ZoneOffset(mid) {
+	if zoneOffset(start) == zoneOffset(mid) {
 		return recursiveTzTransitionSearch(mid, end)
 	}
 
@@ -91,14 +91,14 @@ func timeHandler(w http.ResponseWriter, r *http.Request) {
 	now = now.In(location)
 
 	nowMillis := now.UnixMilli()
-	nowOffset := int64(ZoneOffset(now))
+	nowOffset := int64(zoneOffset(now))
 
 	var transMillis, transOffset *int64
 
 	offsetChangeTimestamp, err := findNextTimezoneTransition(now)
 	if err == nil {
 		millis := offsetChangeTimestamp.UnixMilli()
-		offset := int64(ZoneOffset(offsetChangeTimestamp))
+		offset := int64(zoneOffset(offsetChangeTimestamp))
 		transMillis = &millis
 		transOffset = &offset
 	}
