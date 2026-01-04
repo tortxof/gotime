@@ -90,17 +90,22 @@ func timeHandler(w http.ResponseWriter, r *http.Request) {
 
 	now = now.In(location)
 
-	var transMillis, transOffset int
+	nowMillis := now.UnixMilli()
+	nowOffset := int64(ZoneOffset(now))
+
+	var transMillis, transOffset *int64
 
 	offsetChangeTimestamp, err := findNextTimezoneTransition(now)
 	if err == nil {
-		transMillis = int(offsetChangeTimestamp.UnixMilli())
-		transOffset = ZoneOffset(offsetChangeTimestamp)
+		millis := offsetChangeTimestamp.UnixMilli()
+		offset := int64(ZoneOffset(offsetChangeTimestamp))
+		transMillis = &millis
+		transOffset = &offset
 	}
 
-	data := [4]int{
-		int(now.UnixMilli()),
-		ZoneOffset(now),
+	data := [4]*int64{
+		&nowMillis,
+		&nowOffset,
 		transMillis,
 		transOffset,
 	}
