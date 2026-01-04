@@ -5,6 +5,8 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 )
 
@@ -50,6 +52,11 @@ func recursiveTzTransitionSearch(start time.Time, end time.Time) time.Time {
 
 func timeHandler(w http.ResponseWriter, r *http.Request) {
 	now := time.Now()
+	if override := os.Getenv("OVERRIDE_CURRENT_TIME"); override != "" {
+		if ts, err := strconv.ParseInt(override, 10, 64); err == nil {
+			now = time.Unix(ts, 0)
+		}
+	}
 
 	timezone := r.Header.Get("X-Timezone")
 	if timezone == "" {
@@ -77,7 +84,7 @@ func timeHandler(w http.ResponseWriter, r *http.Request) {
 		ZoneOffset(now),
 		transMillis,
 		transOffset,
-	} // [<current millisecond timestamp>, <UTC offset in seconds based on timezone>, <millisecond timestamp at next offset change>, <new offset>]
+	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(data)
 }
