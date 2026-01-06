@@ -233,4 +233,4 @@ transition rules.
 
 ## License
 
-This project is open source.
+Public domain. See [LICENSE.md](LICENSE.md).
