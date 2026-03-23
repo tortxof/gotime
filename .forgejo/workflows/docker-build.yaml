@@ -1,0 +1,32 @@
+on: [push]
+
+jobs:
+  build:
+    runs-on: docker
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v6
+
+      - name: set image tag
+        run: |
+          if [ "${{ env.FORGEJO_REF_TYPE }}" = "tag" ]; then
+            echo "IMAGE_TAG=${{ env.FORGEJO_REF_NAME }}" >> $FORGEJO_ENV
+          else
+            echo "IMAGE_TAG=${FORGEJO_SHA::8}" >> $FORGEJO_ENV
+          fi
+
+      - name: log in to registry
+        run: |
+          echo "${{ secrets.FORGEJO_TOKEN }}" | docker login ${{ env.FORGEJO_SERVER_URL }} -u ${{ env.FORGEJO_ACTOR }} --password-stdin
+
+      - name: build image
+        run: |
+          docker build -t ${{ env.FORGEJO_REPOSITORY }}:${{ env.IMAGE_TAG }} .
+
+      - name: tag image
+        run: |
+          docker tag ${{ env.FORGEJO_REPOSITORY }}:${{ env.IMAGE_TAG }} ${{ env.FORGEJO_SERVER_URL }}/${{ env.FORGEJO_ACTOR }}/${{ env.FORGEJO_REPOSITORY }}:${{ env.IMAGE_TAG }}
+
+      - name: push image
+        run: |
+          docker push ${{ env.FORGEJO_SERVER_URL }}/${{ env.FORGEJO_ACTOR }}/${{ env.FORGEJO_REPOSITORY }}:${{ env.IMAGE_TAG }}
